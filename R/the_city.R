@@ -10,13 +10,16 @@ setMethod("initialize", "TheCity",
           function(.Object, key, token, max.sleep.time, env = new.env()) {
               .Object@key = key
               .Object@token = token
-              .Object@max.sleep.time = 10
+              .Object@max.sleep.time = 5
               .Object@env$last.request.time = Sys.time()
               .Object@env$rate.limit = 10000
               .Object@env$rate.limit.remaining = 10000
               .Object@env$users = data.frame()
               .Object@env$groups = data.frame()
+              .Object@env$addresses = data.frame()
               .Object@env$campuses = data.frame()
+              .Object@env$roles = data.frame()
+              .Object@env$skills = data.frame()
               return(.Object)
           }
 )

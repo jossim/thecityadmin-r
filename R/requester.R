@@ -8,7 +8,7 @@ setMethod("sleep.time", "TheCity",
               max.sec = max.sleep.time(object) * 60
               last.sec = as.numeric(last.request.time(object))
               time.now = as.numeric(Sys.time())
-              #browser()
+              
               if (last.sec + max.sec < time.now) {
                   time = 0 
               } else {
@@ -16,9 +16,9 @@ setMethod("sleep.time", "TheCity",
                         (1 - rate.limit.remaining(object) / rate.limit(object))
               }
               
-              msg = paste("Sleeping for", time, "sec.", 
-                          rate.limit.remaining(object), "requests remaining out of",
-                          rate.limit(object), "total. Max sleep time is",
+              msg = paste("Sleeping:", time, "sec.", 
+                          rate.limit.remaining(object), "remain out of",
+                          rate.limit(object), "total. Max sleep:",
                           max.sleep.time(object), "minutes")
               print(msg)
               Sys.sleep(time)
@@ -37,9 +37,13 @@ setMethod("hmac.signature", "TheCity",
               ctime = as.character(time)
               ltime = strsplit(ctime, split = ".", fixed = TRUE)[[1]]
               ctime = ltime[1]
-                
-              string_to_sign = paste(ctime, verb, host, "/", path, query, sep = "")
-
+              
+              if(nchar(query) > 0)
+                  string_to_sign = paste(ctime, verb, host, "/", path, "?", 
+                                         query, sep = "")
+              else
+                  string_to_sign = paste(ctime, verb, host, "/", path, sep = "")
+              
               hm = hmac(key = key(object), object = string_to_sign, 
                         algo = "sha256", raw = T)
                 
@@ -50,7 +54,7 @@ setMethod("hmac.signature", "TheCity",
 setGeneric("request", function(object, ...) standardGeneric("request"))
 setMethod("request", "TheCity", 
           function(object,
-                   path,
+                   path = "",
                    query = "", 
                    host = "https://api.onthecity.org", 
                    time = as.numeric(Sys.time()), verb = 'GET') {
@@ -72,7 +76,7 @@ setMethod("request", "TheCity",
                            )
               
               #get = getURL(paste(host, path, sep = "/"), httpheader = headers, verbose = T)
-              r = GET(url = host, path = path, add_headers(headers))
+              r = GET(url = host, path = path, query = query, add_headers(headers))
               
               rate.limit(object) = 
                   as.numeric(r$headers['x-city-ratelimit-limit-by-account'])
@@ -84,9 +88,69 @@ setMethod("request", "TheCity",
           }
 )
 
-setGeneric("request_iterator", function(object, ...) standardGeneric("request_iterator"))
-setMethod("request_iterator", "TheCity",
-          function(object, resource, params = c(), total = "all", start = 0) {
+setGeneric("request.iterator", function(object, ...) standardGeneric("request.iterator"))
+setMethod("request.iterator", "TheCity",
+          function(object, resource, df, params = c(), total = "all", start = 1) {
+              page = start
+              pages.left = TRUE
+             
+              if(total != "all") page.stop = start + total - 1
               
+              while(pages.left) {
+                  sleep.time(object) # sleep before sending the request
+                  
+                  query = paste("page=", page, sep = "")
+                  req = request(object, path = resource, query = query)
+                  cont = content(req)
+                  
+                  items = cont[[resource]]
+                  # remove NULLs & replace them with NAs
+                  items = lapply(items, lapply, 
+                                 function(x) ifelse(is.null(x), NA, x))
+
+                  # If the data frame is empty, make a new one with the correct
+                  # names and add data to it. If it's not, then just add data.
+                  if(ncol(df) == 0) {
+                      df = data.frame(matrix(unlist(items[[1]]), 
+                                                     nrow = 1, 
+                                                     ncol = length(items[[1]]))
+                                              )
+                      colnames(df) = names(items[[1]])
+                      
+                      for(i in 2:length(items)) {
+                          tmp = data.frame(matrix(unlist(items[[i]]), 
+                                                  nrow = 1, 
+                                                  ncol = length(items[[i]]))
+                          )
+                          colnames(tmp) = names(items[[1]])
+                          df = rbind(df, tmp)
+                      }
+                  }
+                  else {
+                      for(i in 1:length(items)) {
+                          tmp = data.frame(matrix(unlist(items[[i]]), 
+                                                  nrow = 1, 
+                                                  ncol = length(items[[i]]))
+                          )
+                          colnames(tmp) = names(items[[1]])
+                          df = rbind(df, tmp)
+                      }
+                  }
+                                    
+                  if(total == "all") {
+                      msg = paste("Page: ", page, ". Stopping at: ", 
+                                  cont$total_pages, sep = "")
+                      print(msg)
+                      pages.left = cont$total_pages > page
+                  }
+                  else {
+                      msg = paste("Page: ", page, ". Stopping at: ",
+                                  page.stop, sep = "")
+                      print(msg)
+                      pages.left = page.stop > page
+                  }
+                  page = page + 1
+              }
+              return(df)
           }
 )
