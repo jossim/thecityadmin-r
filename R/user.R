@@ -12,10 +12,10 @@ setMethod("users<-", "TheCity",
 
 setGeneric("fetch.users", function(object,...) standardGeneric("fetch.users"))
 setMethod("fetch.users", "TheCity",
-          function(object, start = 1, total = "all") {
+          function(object, start = 1, total = "all", sleep = TRUE) {
               df = users(object)
               new.df = request.iterator(object, "users", start = start, 
-                                        total = total, df = df)
+                                        total = total, df = df, sleep = sleep)
               users(object) = new.df
           }
 )
