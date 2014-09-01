@@ -2,14 +2,37 @@ library(digest)
 library(RCurl)
 library(httr)
 
-setGeneric("hmac_signature", function(object, ...) standardGeneric("hmac_signature"))
-setMethod("hmac_signature", "TheCity",
+setGeneric("sleep.time", function(object) standardGeneric("sleep.time"))
+setMethod("sleep.time", "TheCity",
+          function(object) {
+              max.sec = max.sleep.time(object) * 60
+              last.sec = as.numeric(last.request.time(object))
+              time.now = as.numeric(Sys.time())
+
+              if (last.sec + max.sec < time.now) {
+                  time = 0 
+              } else {
+                  time = 60 * max.sleep.time(object) * 
+                        (1 - rate.limit.remaining(object) / rate.limit(object))
+              }
+              
+              msg = paste("Sleeping for", time, "sec.", 
+                          rate.limit.remaining(object), "requests remaining out of",
+                          rate.limit(object), "total. Max sleep time is",
+                          max.sleep.time(object), "minutes")
+              print(msg)
+              return(time)
+          }
+)
+
+setGeneric("hmac.signature", function(object, ...) standardGeneric("hmac.signature"))
+setMethod("hmac.signature", "TheCity",
           function(object,
                    path = "",
                    query = "",
                    verb = "GET",
                    host = "https://api.onthecity.org",
-                   time = as.numeric(Sys.time()), ...) {
+                   time = as.numeric(Sys.time())) {
               
               ctime = as.character(time)
               ltime = strsplit(ctime, split = ".", fixed = TRUE)[[1]]
@@ -32,7 +55,7 @@ setMethod("request", "TheCity",
                    host = "https://api.onthecity.org", 
                    time = as.numeric(Sys.time()), verb = 'GET') {
               
-              sig = hmac_signature(object, path = path, time = time, 
+              sig = hmac.signature(object, path = path, time = time, 
                                    query = query, host = host, verb = verb)
     
               ctime = as.character(time)
@@ -49,13 +72,18 @@ setMethod("request", "TheCity",
                            )
               
               #get = getURL(paste(host, path, sep = "/"), httpheader = headers, verbose = T)
-              GET(url = host, path = path, add_headers(headers))
+              r = GET(url = host, path = path, add_headers(headers))
+              
+              rate.limit(object) = 
+                  as.numeric(r$headers['x-city-ratelimit-limit-by-account'])
+              rate.limit.remaining(object) = 
+                  as.numeric(r$headers['x-city-ratelimit-remaining-by-account'])
+              
+              return(r)
           }
 )
 
 setGeneric("request_iterator", function(object, ...) standardGeneric("request_iterator"))
 setMethod("request_iterator", "TheCity",
-          function(object, resource, total = "all", start = 0) {
-              
-          }
+          function(object, resource, params = c(), total = "all", start = 0) {}
 )
