@@ -2,7 +2,6 @@ TheCity <- setClass("TheCity",
                     slots = list(key = "character", 
                                  token = "character",
                                  max.sleep.time = "numeric",
-                                 last.request.time = "POSIXct",
                                  env = "environment"
                                  )
                     )
@@ -12,7 +11,7 @@ setMethod("initialize", "TheCity",
               .Object@key = key
               .Object@token = token
               .Object@max.sleep.time = 10
-              .Object@last.request.time = Sys.time()
+              .Object@env$last.request.time = Sys.time()
               .Object@env$rate.limit = 10000
               .Object@env$rate.limit.remaining = 10000
               .Object@env$users = data.frame()
@@ -60,7 +59,17 @@ setMethod("max.sleep.time<-", "TheCity",
 )
 
 setGeneric("last.request.time", function(object) standardGeneric("last.request.time"))
-setMethod("last.request.time", "TheCity", function(object) object@last.request.time)
+setMethod("last.request.time", "TheCity", function(object) object@env$last.request.time)
+
+setGeneric("last.request.time<-", 
+           function(object, value) standardGeneric("last.request.time<-"))
+setMethod("last.request.time<-", "TheCity",
+          function(object, value) {
+              object@env$last.request.time <- value
+              if(validObject(object))
+                  return(object)
+          }
+)
 
 setGeneric("rate.limit", function(object) standardGeneric("rate.limit"))
 setMethod("rate.limit", "TheCity", function(object) object@env$rate.limit)

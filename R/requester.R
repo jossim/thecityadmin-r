@@ -8,7 +8,7 @@ setMethod("sleep.time", "TheCity",
               max.sec = max.sleep.time(object) * 60
               last.sec = as.numeric(last.request.time(object))
               time.now = as.numeric(Sys.time())
-
+              #browser()
               if (last.sec + max.sec < time.now) {
                   time = 0 
               } else {
@@ -21,7 +21,7 @@ setMethod("sleep.time", "TheCity",
                           rate.limit(object), "total. Max sleep time is",
                           max.sleep.time(object), "minutes")
               print(msg)
-              return(time)
+              Sys.sleep(time)
           }
 )
 
@@ -78,6 +78,7 @@ setMethod("request", "TheCity",
                   as.numeric(r$headers['x-city-ratelimit-limit-by-account'])
               rate.limit.remaining(object) = 
                   as.numeric(r$headers['x-city-ratelimit-remaining-by-account'])
+              last.request.time(object) = Sys.time()
               
               return(r)
           }
@@ -85,5 +86,7 @@ setMethod("request", "TheCity",
 
 setGeneric("request_iterator", function(object, ...) standardGeneric("request_iterator"))
 setMethod("request_iterator", "TheCity",
-          function(object, resource, params = c(), total = "all", start = 0) {}
+          function(object, resource, params = c(), total = "all", start = 0) {
+              
+          }
 )
