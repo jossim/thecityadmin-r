@@ -90,14 +90,15 @@ setMethod("request", "TheCity",
 
 setGeneric("request.iterator", function(object, ...) standardGeneric("request.iterator"))
 setMethod("request.iterator", "TheCity",
-          function(object, resource, df, params = c(), total = "all", start = 1) {
+          function(object, resource, df, params = c(), total = "all", start = 1,
+                   sleep = TRUE) {
               page = start
               pages.left = TRUE
              
               if(total != "all") page.stop = start + total - 1
               
               while(pages.left) {
-                  sleep.time(object) # sleep before sending the request
+                  if(sleep) sleep.time(object) # sleep before sending the request
                   
                   query = paste("page=", page, sep = "")
                   req = request(object, path = resource, query = query)
