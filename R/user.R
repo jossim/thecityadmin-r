@@ -19,3 +19,8 @@ setMethod("fetch.users", "TheCity",
               users(object) = new.df
           }
 )
+
+setGeneric("save.users", function(object, file) standardGeneric("save.users"))
+setMethod("save.users", "TheCity", 
+          function(object, file) saveRDS(users(object), file)
+)
