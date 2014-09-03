@@ -10,8 +10,10 @@ setMethod("initialize", "TheCity",
           function(.Object, key, token, max.sleep.time, env = new.env()) {
               .Object@key = key
               .Object@token = token
-              .Object@max.sleep.time = 5
+              .Object@max.sleep.time = 1.25
               .Object@env$last.request.time = Sys.time()
+              .Object@env$request = list(path = "", query = "", host = "", 
+                                         verb = "")
               .Object@env$rate.limit = 10000
               .Object@env$rate.limit.remaining = 10000
               .Object@env$users = data.frame()

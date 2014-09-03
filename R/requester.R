@@ -16,7 +16,7 @@ setMethod("sleep.time", "TheCity",
                         (1 - rate.limit.remaining(object) / rate.limit(object))
               }
               
-              msg = paste("Sleeping:", time, "sec.", 
+              msg = paste(Sys.time(), "Sleeping:", time, "sec.", 
                           rate.limit.remaining(object), "remain out of",
                           rate.limit(object), "total. Max sleep:",
                           max.sleep.time(object), "minutes")
@@ -57,7 +57,10 @@ setMethod("request", "TheCity",
                    path = "",
                    query = "", 
                    host = "https://api.onthecity.org", 
-                   time = as.numeric(Sys.time()), verb = 'GET') {
+                   time = Sys.time(), verb = 'GET') {
+              
+              time = Sys.time()
+              time = as.numeric(time)
               
               sig = hmac.signature(object, path = path, time = time, 
                                    query = query, host = host, verb = verb)
@@ -78,13 +81,52 @@ setMethod("request", "TheCity",
               #get = getURL(paste(host, path, sep = "/"), httpheader = headers, verbose = T)
               r = GET(url = host, path = path, query = query, add_headers(headers))
               
-              rate.limit(object) = 
-                  as.numeric(r$headers['x-city-ratelimit-limit-by-account'])
-              rate.limit.remaining(object) = 
-                  as.numeric(r$headers['x-city-ratelimit-remaining-by-account'])
               last.request.time(object) = Sys.time()
               
+              object@env$request = list(path = path, query = query, host = host, 
+                                        verb = verb)
+              
               return(r)
+          }
+)
+
+setGeneric("request.error.handler", function(object, ...) 
+    standardGeneric("request.error.handler"))
+setMethod("request.error.handler", "TheCity",
+          function(object, request, request.tries = 3) {
+              sc = request$status_code
+              status = request$status
+              if (sc == 200 || sc == 304) {
+                  rate.limit(object) = 
+                      as.numeric(request$headers['x-city-ratelimit-limit-by-account'])
+                  rate.limit.remaining(object) = 
+                      as.numeric(request$headers['x-city-ratelimit-remaining-by-account'])
+                  return(request)
+              }
+              else if (sc == 404) {
+                  stop("Request returned 404 error.")
+              }
+              else if(request.tries <= 0) {
+                  msg = paste("Unable to proccess request. Reason:", status)
+                  stop(msg)
+              }
+              else {
+                  request.tries = request.tries - 1
+                  
+                  msg = paste("Error: ", status, "trying ", 
+                              request.tries, " more times.", sep = "")
+                  warning(msg)
+                  print(msg)
+                  
+                  sleep.time(object)
+                  req.data = object@env$request
+                  
+                  req = request(object, path = req.data$path, 
+                                query = req.data$query, host = req.data$host,
+                                verb = req.data$verb)
+                  
+                  request.error.handler(object, req, request.tries)
+              }
           }
 )
 
@@ -101,7 +143,8 @@ setMethod("request.iterator", "TheCity",
                   if(sleep) sleep.time(object) # sleep before sending the request
                   
                   query = paste("page=", page, sep = "")
-                  req = request(object, path = resource, query = query)
+                  req = request.error.handler(object,
+                                request(object, path = resource, query = query))
                   cont = content(req)
                   
                   items = cont[[resource]]
