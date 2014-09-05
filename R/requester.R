@@ -161,24 +161,10 @@ setMethod("request.iterator", "TheCity",
                                               )
                       colnames(df) = names(items[[1]])
                       
-                      for(i in 2:length(items)) {
-                          tmp = data.frame(matrix(unlist(items[[i]]), 
-                                                  nrow = 1, 
-                                                  ncol = length(items[[i]]))
-                          )
-                          colnames(tmp) = names(items[[1]])
-                          df = rbind(df, tmp)
-                      }
+                      df = build.frame(df, items, index = 1)
                   }
                   else {
-                      for(i in 1:length(items)) {
-                          tmp = data.frame(matrix(unlist(items[[i]]), 
-                                                  nrow = 1, 
-                                                  ncol = length(items[[i]]))
-                          )
-                          colnames(tmp) = names(items[[1]])
-                          df = rbind(df, tmp)
-                      }
+                      df = build.frame(df, items, index = 2)
                   }
                                     
                   if(total == "all") {
