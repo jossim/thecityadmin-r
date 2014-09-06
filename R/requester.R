@@ -161,10 +161,10 @@ setMethod("request.iterator", "TheCity",
                                               )
                       colnames(df) = names(items[[1]])
                       
-                      df = build.frame(df, items, index = 1)
+                      df = build.frame(df, items, index = 2)
                   }
                   else {
-                      df = build.frame(df, items, index = 2)
+                      df = build.frame(df, items, index = 1)
                   }
                                     
                   if(total == "all") {
