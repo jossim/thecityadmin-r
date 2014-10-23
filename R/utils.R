@@ -1,4 +1,5 @@
-require(plyr)
+#require(plyr)
+
 # Returns the items in y that are not also in x.
 diffy <- function(x, y) {
     diff = NULL
@@ -28,6 +29,7 @@ multi.cbind <- function(df, names, default = NA) {
 # Takes in a data frame & a list of items to be added, row wise, to the data 
 # frame. If the list has different column names than the data frame, then the
 # combind data frame will include all the named columns.
+#' @importFrom plyr rbind.fill
 build.frame <- function(df, items, index = 1) {    
     for(i in index:length(items)) {
         tmp = data.frame(matrix(unlist(items[[i]]), 
@@ -66,9 +68,7 @@ flatten.list <- function(lst) {
     lst = lapply(lst, function(x) replace.empty(x))
     
     for(i in 1:length(lst)) {
-        #print(class(lst[[i]]))
         if(class(lst[[i]]) == "list") {
-            #browser()
             names(lst[[i]]) = paste(lst.names[i], names(lst[[i]]), sep = ".")
             new.list = append(new.list, flatten.list(lst[[i]]))
         }

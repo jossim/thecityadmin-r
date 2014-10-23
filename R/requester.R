@@ -1,6 +1,6 @@
-library(digest)
-library(RCurl)
-library(httr)
+#library(digest)
+#library(RCurl)
+#library(httr)
 
 setGeneric("sleep.time", function(object) standardGeneric("sleep.time"))
 setMethod("sleep.time", "TheCity",
@@ -25,6 +25,9 @@ setMethod("sleep.time", "TheCity",
           }
 )
 
+#' @importFrom digest hmac
+#' @importFrom RCurl curlEscape
+#' @importFrom RCurl base64
 setGeneric("hmac.signature", function(object, ...) standardGeneric("hmac.signature"))
 setMethod("hmac.signature", "TheCity",
           function(object,
@@ -44,13 +47,15 @@ setMethod("hmac.signature", "TheCity",
               else
                   string_to_sign = paste(ctime, verb, host, "/", path, sep = "")
               
-              hm = hmac(key = key(object), object = string_to_sign, 
+              hm = digest::hmac(key = key(object), object = string_to_sign, 
                         algo = "sha256", raw = T)
                 
               curlEscape(base64(hm)[1])
           }
 )
 
+#' @importFrom httr GET
+#' @importFrom httr add_headers
 setGeneric("request", function(object, ...) standardGeneric("request"))
 setMethod("request", "TheCity", 
           function(object,
@@ -132,7 +137,7 @@ setMethod("request.error.handler", "TheCity",
               }
           }
 )
-
+#' @importFrom httr content
 setGeneric("request.iterator", function(object, ...) standardGeneric("request.iterator"))
 setMethod("request.iterator", "TheCity",
           function(object, resource, df, params = c(), total = "all", start = 1,

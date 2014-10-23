@@ -1,8 +1,16 @@
-Package: thecity-admin-r
-Title: What the package does (short line)
+Package: TheCityAdmin
 Version: 0.1
-Authors@R: "First Last <first.last@example.com> [aut, cre]"
-Description: What the package does (paragraph)
-Depends: R (>= 3.0.2)
-License: What license is it under?
-LazyData: true
+Date: 2014-09-01
+Title: And interface to The City admin API for the R programming language
+Authors@R: c(person("Joseph", "Simmons", role = c("aut", "cre"), email =
+    "josephdsimmons@gmail.com"))
+Description: And interface to The City admin API for the R programming language
+Depends:
+    R (>= 3.0.2)
+Imports:
+    digest (>= 0.6.4),
+    RCurl (>= 1.95-4.3),
+    httr (>= 0.4),
+    plyr
+License: GPL-3
+BugReports: https://github.com/jossim/thecityadmin-r/issues
