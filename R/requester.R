@@ -79,7 +79,10 @@ setMethod("request", "TheCity",
                            )
               
               #get = getURL(paste(host, path, sep = "/"), httpheader = headers, verbose = T)
-              r = GET(url = host, path = path, query = query, add_headers(headers))
+              if(nchar(query) > 0)
+                  r = GET(url = host, path = path, query = query, add_headers(headers))
+              else
+                  r = GET(url = host, path = path, add_headers(headers))
               
               last.request.time(object) = Sys.time()
               
@@ -113,7 +116,7 @@ setMethod("request.error.handler", "TheCity",
               else {
                   request.tries = request.tries - 1
                   
-                  msg = paste("Error: ", status, "trying ", 
+                  msg = paste("Error: ", status, " trying ", 
                               request.tries, " more times.", sep = "")
                   warning(msg)
                   print(msg)
@@ -149,18 +152,19 @@ setMethod("request.iterator", "TheCity",
                   
                   items = cont[[resource]]
                   # remove NULLs & replace them with NAs
-                  items = lapply(items, lapply, 
-                                 function(x) ifelse(is.null(x), NA, x))
+                  
+                  items = lapply(items, function(x) flatten.list(x))
 
                   # If the data frame is empty, make a new one with the correct
                   # names and add data to it. If it's not, then just add data.
                   if(ncol(df) == 0) {
-                      df = data.frame(matrix(unlist(items[[1]]), 
-                                                     nrow = 1, 
-                                                     ncol = length(items[[1]]))
-                                              )
-                      colnames(df) = names(items[[1]])
+                      df = data.frame(matrix(
+                                unlist(items[[1]]),
+                                nrow = 1,
+                                ncol = length(unlist(items[[1]])))
+                            )
                       
+                      colnames(df) = names(items[[1]])
                       df = build.frame(df, items, index = 2)
                   }
                   else {

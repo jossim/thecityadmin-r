@@ -20,6 +20,7 @@ setMethod("initialize", "TheCity",
               .Object@env$groups = data.frame()
               .Object@env$addresses = data.frame()
               .Object@env$campuses = data.frame()
+              .Object@env$checkins = data.frame()
               .Object@env$roles = data.frame()
               .Object@env$skills = data.frame()
               return(.Object)
