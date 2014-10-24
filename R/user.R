@@ -17,6 +17,40 @@ setMethod("users<-", "TheCity",
           }
 )
 
+#' A user on The City
+#' 
+#' Looks in TheCity object for the user. If not found, looks to the API & adds
+#' the user to the stored users in TheCity object.
+#' 
+#' @param object an instance of TheCity class
+#' @param usid the user id of the given user
+#' @return a data frame of the user
+#' @importFrom plyr rbind.fill
+#' @export
+setGeneric("user", function(object, usid) standardGeneric("user"))
+setMethod("user", "TheCity",
+          function(object, usid) {
+              user = data.frame()
+              users = users(object)
+              
+              if(nrow(users) > 0)
+                  user = subset(users, users$id == usid)
+              
+              if(nrow(user) > 0)
+                  return(user)
+              else {
+                  path = paste("users", usid, sep = "/")
+                  req = request.error.handler(object, 
+                                               request(object, path = path))
+                  user = content(req)
+                  user = lapply(user, function(ele) replace.empty(ele))
+                  user = as.data.frame(user)
+                  users(object) = rbind.fill(users, user)
+                  return(user)
+              }
+          }
+)
+
 #' Gets users via The City API
 #' 
 #' @param object an instance of TheCity class
