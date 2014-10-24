@@ -43,6 +43,7 @@ setMethod("fetch.checkins", "TheCity",
 #' 
 #' @param object an instance of TheCity class
 #' @param file the file path to save the data at
+#' @export
 setGeneric("save.checkins", 
            function(object, file) standardGeneric("save.checkins"))
 setMethod("save.checkins", "TheCity", 
