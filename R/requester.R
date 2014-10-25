@@ -40,13 +40,13 @@ setMethod("hmac.signature", "TheCity",
               ctime = as.character(time)
               ltime = strsplit(ctime, split = ".", fixed = TRUE)[[1]]
               ctime = ltime[1]
-
+              
               if(nchar(query) > 0)
                   string_to_sign = paste(ctime, verb, host, "/", path, "?", 
                                          query, sep = "")
               else
                   string_to_sign = paste(ctime, verb, host, "/", path, sep = "")
-              
+
               hm = digest::hmac(key = key(object), object = string_to_sign, 
                         algo = "sha256", raw = T)
                 
@@ -67,14 +67,14 @@ setMethod("request", "TheCity",
               time = Sys.time()
               time = as.numeric(time)
               
-              
+              query.str =''
               if(length(query) > 0) {
-                  query = paste(names(query), query, sep = "=")
-                  query = paste0(query, collapse = "&")
+                  query.str = paste(names(query), query, sep = "=")
+                  query.str = paste0(query.str, collapse = "&")
               }
               
               sig = hmac.signature(object, path = path, time = time, 
-                                   query = query, host = host, verb = verb)
+                                   query = query.str, host = host, verb = verb)
     
               ctime = as.character(time)
               ltime = strsplit(ctime, split = ".", fixed = TRUE)[[1]]
@@ -90,8 +90,8 @@ setMethod("request", "TheCity",
                            )
               
               #get = getURL(paste(host, path, sep = "/"), httpheader = headers, verbose = T)
-              if(nchar(query) > 0)
-                  r = GET(url = host, path = path, query = query, add_headers(headers))
+              if(length(query) > 0)
+                  r = GET(url = host, path = path, query = query.str, add_headers(headers))
               else
                   r = GET(url = host, path = path, add_headers(headers))
               
@@ -99,7 +99,7 @@ setMethod("request", "TheCity",
               
               object@env$request = list(path = path, query = query, host = host, 
                                         verb = verb)
-              
+
               return(r)
           }
 )
@@ -155,7 +155,7 @@ setMethod("request.iterator", "TheCity",
               
               while(pages.left) {
                   if(sleep) sleep.time(object) # sleep before sending the request
-                  
+
                   req = request.error.handler(object,
                                 request(object, path = resource, query = params))
                   cont = content(req)
