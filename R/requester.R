@@ -40,7 +40,7 @@ setMethod("hmac.signature", "TheCity",
               ctime = as.character(time)
               ltime = strsplit(ctime, split = ".", fixed = TRUE)[[1]]
               ctime = ltime[1]
-              
+
               if(nchar(query) > 0)
                   string_to_sign = paste(ctime, verb, host, "/", path, "?", 
                                          query, sep = "")
@@ -60,12 +60,18 @@ setGeneric("request", function(object, ...) standardGeneric("request"))
 setMethod("request", "TheCity", 
           function(object,
                    path = "",
-                   query = "", 
+                   query = c(), 
                    host = "https://api.onthecity.org", 
                    time = Sys.time(), verb = 'GET') {
               
               time = Sys.time()
               time = as.numeric(time)
+              
+              
+              if(length(query) > 0) {
+                  query = paste(names(query), query, sep = "=")
+                  query = paste0(query, collapse = "&")
+              }
               
               sig = hmac.signature(object, path = path, time = time, 
                                    query = query, host = host, verb = verb)
@@ -142,17 +148,16 @@ setGeneric("request.iterator", function(object, ...) standardGeneric("request.it
 setMethod("request.iterator", "TheCity",
           function(object, resource, df, params = c(), total = "all", start = 1,
                    sleep = TRUE) {
-              page = start
               pages.left = TRUE
+              params = c(params, page = start)
              
               if(total != "all") page.stop = start + total - 1
               
               while(pages.left) {
                   if(sleep) sleep.time(object) # sleep before sending the request
                   
-                  query = paste("page=", page, sep = "")
                   req = request.error.handler(object,
-                                request(object, path = resource, query = query))
+                                request(object, path = resource, query = params))
                   cont = content(req)
                   
                   items = cont[[resource]]
@@ -175,7 +180,8 @@ setMethod("request.iterator", "TheCity",
                   else {
                       df = build.frame(df, items, index = 1)
                   }
-                                    
+                  
+                  page = as.numeric(params['page'])
                   if(total == "all") {
                       msg = paste("Page: ", page, ". Stopping at: ", 
                                   cont$total_pages, sep = "")
@@ -188,7 +194,7 @@ setMethod("request.iterator", "TheCity",
                       print(msg)
                       pages.left = page.stop > page
                   }
-                  page = page + 1
+                  params['page'] = page + 1
               }
               return(df)
           }
