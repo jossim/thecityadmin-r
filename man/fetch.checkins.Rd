@@ -3,7 +3,8 @@
 \alias{fetch.checkins}
 \title{Gets event checkins via The City API}
 \usage{
-fetch.checkins(object, start = 1, total = "all", sleep = TRUE)
+fetch.checkins(object, start = 1, total = "all", sleep = TRUE,
+  params = c())
 }
 \arguments{
 \item{object}{an instance of TheCity class}
@@ -14,6 +15,8 @@ fetch.checkins(object, start = 1, total = "all", sleep = TRUE)
 
 \item{sleep}{if TRUE a sleep time will be inserted between page requests.
 Default: TRUE}
+
+\item{param}{a named vector of query parameters.}
 }
 \description{
 Gets event checkins via The City API

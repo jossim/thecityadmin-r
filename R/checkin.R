@@ -24,17 +24,21 @@ setMethod("checkins<-", "TheCity",
 #' @param total the number of pages of event checkins to request. Default: all
 #' @param sleep if TRUE a sleep time will be inserted between page requests. 
 #' Default: TRUE
+#' @param param a named vector of query parameters.
 #' @export
 setGeneric("fetch.checkins", 
-           function(object, start = 1, total = "all", sleep = TRUE) { 
+           function(object, start = 1, total = "all", sleep = TRUE, 
+                    params = c()) { 
                standardGeneric("fetch.checkins")
            }
 )
 setMethod("fetch.checkins", "TheCity",
-          function(object, start = 1, total = "all", sleep = TRUE) {
+          function(object, start = 1, total = "all", sleep = TRUE, 
+                   params = c()) {
               df = checkins(object)
               new.df = request.iterator(object, "checkins", start = start, 
-                                        total = total, df = df, sleep = sleep)
+                                        total = total, df = df, params = params,
+                                        sleep = sleep)
               checkins(object) = new.df
           }
 )
